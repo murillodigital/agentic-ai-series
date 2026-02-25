@@ -1,0 +1,24 @@
+# =============================================================================
+# AWS Infrastructure Agent — Module 1 Dependencies
+# =============================================================================
+
+# ── Core agent framework ──────────────────────────────────────────────────────
+strands-agents>=1.0.0             # AWS Strands Agents SDK (open source)
+strands-agents-tools>=0.1.0       # Pre-built tools (current_time, etc.)
+
+# ── AWS AgentCore Runtime (deployment platform) ───────────────────────────────
+bedrock-agentcore>=0.1.0                  # BedrockAgentCoreApp wrapper
+bedrock-agentcore-starter-toolkit>=0.1.0  # agentcore CLI (configure / launch / invoke)
+
+# ── AWS SDK ───────────────────────────────────────────────────────────────────
+boto3>=1.38.0
+botocore>=1.38.0
+
+# ── Rich console output (demo formatting) ────────────────────────────────────
+rich>=13.7.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0              # Load .env for local dev
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0
