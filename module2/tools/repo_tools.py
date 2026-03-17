@@ -250,27 +250,8 @@ def scan_repository_structure(repo_path: str) -> str:
 # TOOL 2 — read_file_content
 # ---------------------------------------------------------------------------
 
-@tool
-def read_file_content(repo_path: str, file_path: str) -> str:
-    """
-    Read the content of a specific file in the repository.
-
-    Use this to read dependency files (package.json, requirements.txt),
-    configuration files (Dockerfile, terraform files), or source code
-    to understand the application stack.
-
-    Parameters
-    ----------
-    repo_path : str
-        Absolute path to the git repository root directory.
-    file_path : str
-        Relative path to the file within the repository.
-
-    Returns
-    -------
-    str
-        JSON with file content and metadata.
-    """
+def _read_file_content_impl(repo_path: str, file_path: str) -> str:
+    """Internal implementation of read_file_content."""
     if _MOCK:
         content = _MOCK_FILE_CONTENTS.get(file_path)
         if content:
@@ -307,6 +288,30 @@ def read_file_content(repo_path: str, file_path: str) -> str:
 
     except Exception as exc:
         return _wrap({"error": str(exc)}, "read_file_content")
+
+
+@tool
+def read_file_content(repo_path: str, file_path: str) -> str:
+    """
+    Read the content of a specific file in the repository.
+
+    Use this to read dependency files (package.json, requirements.txt),
+    configuration files (Dockerfile, terraform files), or source code
+    to understand the application stack.
+
+    Parameters
+    ----------
+    repo_path : str
+        Absolute path to the git repository root directory.
+    file_path : str
+        Relative path to the file within the repository.
+
+    Returns
+    -------
+    str
+        JSON with file content and metadata.
+    """
+    return _read_file_content_impl(repo_path, file_path)
 
 
 # ---------------------------------------------------------------------------
@@ -425,8 +430,8 @@ def analyze_dependencies(repo_path: str, app_path: str, dependency_file: str) ->
     """
     file_path = f"{app_path}/{dependency_file}" if app_path != "." else dependency_file
 
-    # Read the file
-    file_content_result = read_file_content(repo_path, file_path)
+    # Read the file using internal implementation
+    file_content_result = _read_file_content_impl(repo_path, file_path)
     file_data = json.loads(file_content_result).get("data", {})
 
     if "error" in file_data:

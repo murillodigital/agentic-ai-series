@@ -109,8 +109,8 @@ AGENT_MOCK_AWS=true pytest tests/test_tools.py -v
 # Run demo in mock mode (no real repository needed)
 AGENT_MOCK_REPO=true python demos/module2_demo.py
 
-# Run specific section (1-6)
-AGENT_MOCK_REPO=true python demos/module2_demo.py --section 3
+# Run specific section (1-11)
+AGENT_MOCK_REPO=true python demos/module2_demo.py --section 5
 
 # Run tests
 AGENT_MOCK_REPO=true pytest tests/test_repo_tools.py -v

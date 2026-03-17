@@ -26,8 +26,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langgraph.prebuilt import create_react_agent
 from langchain_core.runnables import Runnable
 
 from module2.config.models import get_chat_bedrock_model
@@ -36,7 +35,7 @@ from module2.tools.repo_tools import ALL_TOOLS
 
 
 # ---------------------------------------------------------------------------
-# Agent Factory (Simple AgentExecutor approach)
+# Agent Factory (LangGraph ReAct Agent)
 # ---------------------------------------------------------------------------
 
 def create_agent(
@@ -45,17 +44,17 @@ def create_agent(
     max_iterations: int = 15,
     region: str | None = None,
     streaming: bool = False,
-) -> AgentExecutor:
+) -> Runnable:
     """
-    Create a Module 2 Repository Analysis Agent using LangChain.
+    Create a Module 2 Repository Analysis Agent using LangGraph.
 
-    This is the simple approach using AgentExecutor. For the full LangGraph
-    state machine workflow, use create_graph_agent() instead.
+    This uses LangGraph's create_react_agent which provides a ReAct
+    (Reasoning + Acting) loop with automatic tool calling.
 
     The agent uses:
     - ChatBedrock (LangChain) for model access
-    - Tool calling agent pattern
-    - AgentExecutor for the execution loop
+    - LangGraph ReAct agent pattern
+    - Automatic think-act-observe loop
     - Five repository analysis tools
 
     Parameters
@@ -63,7 +62,7 @@ def create_agent(
     verbose : bool
         Print agent steps and tool calls. Default True for demos.
     max_iterations : int
-        Maximum number of agent loop iterations. Default 15.
+        Maximum number of agent loop iterations. Default 15 (not used in current implementation).
     region : str, optional
         AWS region override. Falls back to AWS_REGION env var.
     streaming : bool
@@ -71,15 +70,15 @@ def create_agent(
 
     Returns
     -------
-    AgentExecutor
-        Configured LangChain agent ready to analyze repositories.
+    Runnable
+        Configured LangGraph agent ready to analyze repositories.
 
     Example
     -------
     >>> from module2.agent import create_agent
     >>> agent = create_agent()
-    >>> result = agent.invoke({"input": "Analyze repository at /path/to/repo"})
-    >>> print(result["output"])
+    >>> result = agent.invoke({"messages": [("user", "Analyze repository at /path/to/repo")]})
+    >>> print(result["messages"][-1].content)
     """
     aws_region = region or os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION") or "us-east-1"
 
@@ -87,37 +86,22 @@ def create_agent(
     model = get_chat_bedrock_model(region=aws_region, streaming=streaming)
     
     if verbose:
-        print(f"  [Module 2 Agent] Using ChatBedrock (LangChain)")
+        print(f"  [Module 2 Agent] Using LangGraph ReAct Agent")
         print(f"  [Model] Claude Sonnet 4 via Amazon Bedrock")
         print(f"  [Region] {aws_region}")
         print(f"  [Tools] {len(ALL_TOOLS)} repository analysis tools")
         print()
 
-    # ── PROMPT TEMPLATE ──────────────────────────────────────────────────────
-    # LangChain uses ChatPromptTemplate for structured prompts
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name="chat_history", optional=True),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
     # ── AGENT CONSTRUCTION ───────────────────────────────────────────────────
-    # Create tool-calling agent (supports Claude's tool use format)
-    agent = create_tool_calling_agent(model, ALL_TOOLS, prompt)
-
-    # ── EXECUTION LOOP ───────────────────────────────────────────────────────
-    # AgentExecutor handles the think-act-observe loop
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=ALL_TOOLS,
-        verbose=verbose,
-        max_iterations=max_iterations,
-        handle_parsing_errors=True,
-        return_intermediate_steps=True,
+    # LangGraph's create_react_agent provides a simple ReAct loop
+    # It handles the think-act-observe pattern automatically
+    agent = create_react_agent(
+        model,
+        ALL_TOOLS,
+        prompt=SYSTEM_PROMPT,
     )
 
-    return agent_executor
+    return agent
 
 
 # ---------------------------------------------------------------------------
@@ -233,10 +217,14 @@ Please:
 
 Return the results as structured JSON."""
 
-    result = agent.invoke({"input": query})
+    result = agent.invoke({"messages": [("user", query)]})
+    
+    # Extract the final message from LangGraph response
+    messages = result.get("messages", [])
+    final_output = messages[-1].content if messages else ""
     
     return {
         "repo_path": repo_path,
-        "output": result.get("output", ""),
-        "intermediate_steps": result.get("intermediate_steps", []),
+        "output": final_output,
+        "messages": messages,
     }
