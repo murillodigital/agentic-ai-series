@@ -70,7 +70,7 @@ import sys
 # Ensure project root is on the path when running directly
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from agent import create_agent
+from module1.agent import create_agent
 
 # ---------------------------------------------------------------------------
 # AgentCore import with graceful fallback

@@ -1,26 +1,48 @@
-# AWS Infrastructure Agent — Module 1: Introduction to AI Agents
+# AI Agent Learning Series on AWS
 
-Hands-on demonstration code for the *Module 1: Introduction to AI Agents* workshop session.
+Hands-on demonstration code for the **AI Agent Learning Series** workshop sessions.
 
 **Use case:** An AWS Infrastructure Engineer is building an agentic system that can provision infrastructure, deploy and build microservices, and observe those services running in AWS.
 
-This module builds the **skeleton** — a working agent that observes and analyses. Later modules add provisioning, deployment, multi-agent patterns, long-term memory, and full autonomy.
+This repository contains multiple modules demonstrating different agent frameworks and patterns:
+- **Module 1**: AWS Strands-based Infrastructure Agent (observe and analyze AWS resources)
+- **Module 2**: LangChain-based Repository Analysis Agent (analyze git repos for deployment planning)
+
+Future modules will add provisioning, deployment, multi-agent patterns, long-term memory, and full autonomy.
 
 ---
 
-## What This Demonstrates
+## Modules Overview
 
-Every concept from the Module 1 slides is visible in the running code:
+### Module 1: AWS Infrastructure Agent (Strands Framework)
 
-| Slide Concept | Where It Lives |
-|---|---|
-| Three Layers (Reasoning / Orchestration / Tools) | `agent.py` → `create_agent()` |
-| Think → Act → Observe loop | `LoopObserver` callback handler in `agent.py` |
-| Context window / short-term memory | `SlidingWindowConversationManager(window_size=10)` |
-| Tools as external system interfaces | `tools/aws_tools.py` — 5 `@tool` functions |
-| Human-in-the-loop pattern | `request_human_review` tool |
-| Model-agnostic architecture | `config/models.py` — one-line model swap |
-| AgentCore deployment | `app.py` — `BedrockAgentCoreApp` wrapper |
+Observes and analyzes AWS infrastructure using AWS Strands framework.
+
+**Key Concepts:**
+- Three Layers (Reasoning / Orchestration / Tools)
+- Think → Act → Observe loop with `LoopObserver`
+- Context window / short-term memory
+- Human-in-the-loop pattern
+- Model-agnostic architecture
+
+**Tools:** 5 read-only AWS tools (ECS, EC2, RDS, Lambda)
+
+[See module1/README.md for details](module1/)
+
+### Module 2: Repository Analysis Agent (LangChain Framework)
+
+Analyzes git repositories to identify applications and AWS infrastructure requirements using LangChain + LangGraph.
+
+**Key Concepts:**
+- LangChain `ChatBedrock` model interface
+- `AgentExecutor` and LangGraph state machines
+- Repository scanning and dependency analysis
+- AWS service mapping from dependencies
+- LangSmith tracing for observability
+
+**Tools:** 5 repository analysis tools (scan, detect, analyze, map)
+
+[See module2/README.md for details](module2/)
 
 ---
 
@@ -28,29 +50,37 @@ Every concept from the Module 1 slides is visible in the running code:
 
 ```
 infra-agent/
-├── agent.py              # Core agent: all three layers assembled
-├── app.py                # AgentCore Runtime entrypoint (deploy here)
-├── requirements.txt
+├── module1/                    # AWS Infrastructure Agent (Strands)
+│   ├── agent.py               # Core agent with three layers
+│   ├── app.py                 # AgentCore Runtime entrypoint
+│   ├── config/models.py       # Anthropic + Hugging Face configs
+│   └── tools/aws_tools.py     # 5 read-only AWS tools
 │
-├── config/
-│   └── models.py         # Anthropic + Hugging Face model configs
-│
-├── tools/
-│   └── aws_tools.py      # 5 read-only AWS tools (@tool decorated)
+├── module2/                    # Repository Analysis Agent (LangChain)
+│   ├── agent.py               # LangChain agent factory
+│   ├── app.py                 # HTTP server entrypoint
+│   ├── config/models.py       # ChatBedrock configuration
+│   ├── tools/repo_tools.py    # 5 repository analysis tools
+│   ├── workflows/             # LangGraph state machine
+│   └── prompts/               # System prompts
 │
 ├── demos/
-│   └── module1_demo.py   # Live workshop demo script (6 sections)
+│   ├── module1_demo.py        # Module 1 workshop demo (6 sections)
+│   └── module2_demo.py        # Module 2 workshop demo (6 sections)
 │
-├── scripts/
-│   └── invoke_agentcore.py  # Invoke deployed agent via boto3
+├── tests/
+│   ├── test_tools.py          # Module 1 tests
+│   ├── test_repo_tools.py     # Module 2 tests
+│   └── fixtures/              # Test repository fixtures
 │
-└── tests/
-    └── test_tools.py     # 27 unit tests (mock mode, no credentials)
+└── requirements.txt           # Dependencies for both modules
 ```
 
 ---
 
-## Quick Start (No AWS Account Needed)
+## Quick Start
+
+### Setup
 
 ```bash
 # 1. Create virtual environment
@@ -58,15 +88,35 @@ python -m venv .venv && source .venv/bin/activate
 
 # 2. Install dependencies
 pip install -r requirements.txt
+```
 
-# 3. Run the full demo in mock mode
+### Module 1: AWS Infrastructure Agent
+
+```bash
+# Run demo in mock mode (no AWS account needed)
 AGENT_MOCK_AWS=true python demos/module1_demo.py
 
-# 4. Run just one section (1–6)
+# Run specific section (1-6)
 AGENT_MOCK_AWS=true python demos/module1_demo.py --section 4
 
-# 5. Run tests
-AGENT_MOCK_AWS=true pytest tests/ -v
+# Run tests
+AGENT_MOCK_AWS=true pytest tests/test_tools.py -v
+```
+
+### Module 2: Repository Analysis Agent
+
+```bash
+# Run demo in mock mode (no real repository needed)
+AGENT_MOCK_REPO=true python demos/module2_demo.py
+
+# Run specific section (1-6)
+AGENT_MOCK_REPO=true python demos/module2_demo.py --section 3
+
+# Run tests
+AGENT_MOCK_REPO=true pytest tests/test_repo_tools.py -v
+
+# Start HTTP server
+python module2/app.py
 ```
 
 ---
@@ -175,11 +225,49 @@ The `create_agent()` factory in `agent.py` accepts `hf_endpoint_arn` and swaps t
 
 ---
 
+## Multi-Agent Architecture (Future)
+
+The two agents are designed to work together in a multi-agent workflow:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  USER REQUEST: "Deploy this repository to AWS"             │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│  ORCHESTRATOR (Module 4)                                    │
+│  Coordinates both agents to complete the task               │
+└─────────────────────────────────────────────────────────────┘
+         ↓                                    ↓
+┌──────────────────────┐          ┌──────────────────────────┐
+│  MODULE 2 AGENT      │          │  MODULE 1 AGENT          │
+│  (Repository)        │          │  (Infrastructure)        │
+│                      │          │                          │
+│  Analyzes repo:      │          │  Checks AWS:             │
+│  • Apps detected     │   →→→    │  • Existing resources    │
+│  • Stacks identified │          │  • Health status         │
+│  • AWS needs mapped  │   ←←←    │  • Gaps identified       │
+└──────────────────────┘          └──────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│  DEPLOYMENT PLAN                                            │
+│  • Infrastructure to provision (CDK/Terraform)              │
+│  • Services to deploy (ECS/Lambda)                          │
+│  • Monitoring to configure (CloudWatch)                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Example Workflow:**
+1. Module 2 analyzes repository → identifies Node.js app needing PostgreSQL + Redis
+2. Module 1 checks AWS → finds existing RDS PostgreSQL, no Redis
+3. Orchestrator generates plan → provision ElastiCache, deploy app to ECS
+4. Human reviews and approves → infrastructure provisioned, app deployed
+
 ## What's Scoped Out (Future Modules)
 
 | Capability | Module |
 |---|---|
-| Write operations (provision, deploy, scale) | Module 3 |
+| Evaluation and routing patterns | Module 3 |
 | Multi-agent supervisor pattern | Module 4 |
 | Long-term memory (DynamoDB / vector store) | Module 7 |
 | RAG / Knowledge Base | Module 10 |

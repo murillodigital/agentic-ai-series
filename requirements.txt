@@ -1,10 +1,17 @@
 # =============================================================================
-# AWS Infrastructure Agent — Module 1 Dependencies
+# AWS Infrastructure Agent — Multi-Module Dependencies
 # =============================================================================
 
-# ── Core agent framework ──────────────────────────────────────────────────────
+# ── Module 1: AWS Strands Agent Framework ────────────────────────────────────
 strands-agents>=1.0.0             # AWS Strands Agents SDK (open source)
 strands-agents-tools>=0.1.0       # Pre-built tools (current_time, etc.)
+
+# ── Module 2: LangChain Agent Framework ──────────────────────────────────────
+langchain>=0.1.0                  # LangChain core framework
+langchain-aws>=0.1.0              # AWS integrations (ChatBedrock, BedrockEmbeddings)
+langchain-community>=0.0.20       # Community integrations
+langgraph>=0.0.20                 # State machine workflows
+langsmith>=0.0.80                 # Tracing and evaluation platform
 
 # ── AWS AgentCore Runtime (deployment platform) ───────────────────────────────
 bedrock-agentcore>=0.1.0                  # BedrockAgentCoreApp wrapper
@@ -19,6 +26,7 @@ rich>=13.7.0
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv>=1.0.0              # Load .env for local dev
+gitpython>=3.1.40                 # Git repository operations (Module 2)
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=8.0.0

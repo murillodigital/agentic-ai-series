@@ -68,8 +68,8 @@ from typing import Any
 from strands import Agent
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 
-from config.models import get_bedrock_model, get_hf_bedrock_model
-from tools.aws_tools import ALL_TOOLS
+from module1.config.models import get_bedrock_model, get_hf_bedrock_model
+from module1.tools.aws_tools import ALL_TOOLS
 
 
 # ---------------------------------------------------------------------------

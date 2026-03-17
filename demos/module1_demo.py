@@ -255,7 +255,7 @@ def section_5_models() -> None:
         "The Strands framework decouples the reasoning engine from the agent logic.",
     )
 
-    from config.models import PROVIDER_INFO, print_provider_info
+    from module1.config.models import PROVIDER_INFO, print_provider_info
 
     print("\n  PROVIDER A — Anthropic Claude Sonnet 4")
     print_provider_info("anthropic")
@@ -292,7 +292,7 @@ def section_5_models() -> None:
     # If HF endpoint is configured, run a side-by-side comparison
     hf_arn = os.getenv("HF_ENDPOINT_ARN")
     if hf_arn:
-        from agent import create_agent
+        from module1.agent import create_agent
         q = "How many ECS services are running in us-east-1?"
         print("  Running side-by-side comparison...\n")
 
@@ -372,7 +372,7 @@ def main() -> None:
         os.environ["AGENT_MOCK_AWS"] = "true"
         print("  Mock mode ON  (pass --live to use real AWS credentials)\n")
 
-    from agent import create_agent
+    from module1.agent import create_agent
 
     hf_arn = os.getenv("HF_ENDPOINT_ARN") if args.hf else None
     agent = create_agent(hf_endpoint_arn=hf_arn, verbose=True, window_size=10)
